@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule Open Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f40;
+    --accent: #4fffb0;
+    --accent2: #ff6b6b;
+    --accent3: #ffd166;
+    --text: #e8ecf5;
+    --muted: #6b7394;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+  header span {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-left: auto;
+  }
+
+  /* ── Main Layout ── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  /* ── Upload Zone ── */
+  #drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  #drop-zone:hover, #drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(79,255,176,0.04);
+  }
+  #drop-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon {
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .upload-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .upload-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── File Pills ── */
+  #file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .file-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    animation: fadeIn 0.2s ease;
+  }
+  .file-pill .remove-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .file-pill .remove-btn:hover { color: var(--accent2); }
+
+  /* ── Filter Row ── */
+  .filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field-label {
+    font-size: 0.68rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7394' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  select:focus { outline: none; border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 26px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Stats Bar ── */
+  #stats-bar {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.yellow { color: var(--accent3); }
+  .stat-value.white { color: var(--text); }
+
+  /* ── Results ── */
+  #results-card { display: none; }
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .results-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .results-meta {
+    font-size: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+
+  /* Search input */
+  #search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-family: 'Syne', sans-serif;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+  #search-input:focus { outline: none; border-color: var(--accent); }
+  #search-input::placeholder { color: var(--muted); }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  thead th {
+    background: var(--surface2);
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(79,255,176,0.04); }
+  tbody td {
+    padding: 11px 16px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(79,255,176,0.12);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .badge-open::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Export btn */
+  .btn-outline {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Progress / loading */
+  #loading-bar {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    header { padding: 16px 20px; }
+    main { padding: 20px 16px; }
+    .filter-row { grid-template-columns: 1fr 1fr; }
+    .filter-row .btn-primary { grid-column: 1 / -1; }
+    #stats-bar { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-dot"></span>
+  <h1>Schedule Open Tracker</h1>
+  <span id="header-date">— 30-min intervals</span>
+</header>
+
+<main>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-title">01 / Upload Data Files</div>
+    <div id="drop-zone">
+      <input type="file" id="file-input" accept=".csv" multiple>
+      <span class="upload-icon">📂</span>
+      <span class="upload-label">Drop CSV files here, or click to browse</span>
+      <span class="upload-sub">Multiple files supported · Columns: Date, Agent ID, Agent Name, Time, Scheduled Open</span>
+    </div>
+    <div id="file-list"></div>
+  </div>
+
+  <!-- Filter -->
+  <div class="card">
+    <div class="card-title">02 / Filter by Time Range</div>
+    <div class="filter-row">
+      <div class="field-group">
+        <label class="field-label" for="start-time">Start Time</label>
+        <select id="start-time"></select>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="end-time">End Time</label>
+        <select id="end-time"></select>
+      </div>
+      <button class="btn-primary" id="apply-btn" disabled>Apply Filter</button>
+    </div>
+    <div id="loading-bar" style="margin-top:14px;">
+      <div class="spinner"></div>
+      <span id="loading-msg">Processing…</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="stats-bar">
+    <div class="stat-box">
+      <span class="stat-label">Open Employees</span>
+      <span class="stat-value green" id="stat-open">—</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Total Employees</span>
+      <span class="stat-value white" id="stat-total">—</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Time Range</span>
+      <span class="stat-value yellow" id="stat-range" style="font-size:1rem;padding-top:6px;">—</span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="results-card">
+    <div class="results-header">
+      <div>
+        <div class="card-title" style="margin-bottom:4px;">03 / Open Employees</div>
+        <span class="results-title" id="results-title"></span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="search-input" placeholder="Search name or ID…">
+        <button class="btn-outline" id="export-btn">⬇ Export CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Agent Name</th>
+            <th>Agent ID</th>
+            <th>Date</th>
+            <th>Open Intervals (in range)</th>
+            <th>Peak Open (min)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--muted);" id="results-count"></div>
+  </div>
+
+</main>
+
+<script>
+// ── Time slot generation ──────────────────────────────────────────
+const INTERVALS = [];
+for (let h = 0; h < 24; h++) {
+  for (let m of [0, 30]) {
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    const mm = m === 0 ? '00' : '30';
+    INTERVALS.push(`${hh}:${mm} ${ampm}`);
+  }
+}
+
+// Populate selects
+function populateSelects() {
+  const s = document.getElementById('start-time');
+  const e = document.getElementById('end-time');
+  INTERVALS.forEach((t, i) => {
+    s.add(new Option(t, i));
+    e.add(new Option(t, i));
+  });
+  // Default 7 AM – 8 AM
+  s.value = 14; // 7:00 AM index
+  e.value = 16; // 8:00 AM index
+}
+populateSelects();
+
+// Normalize time string from CSV to interval index
+function timeToIndex(timeStr) {
+  if (!timeStr) return -1;
+  const t = timeStr.trim().toUpperCase();
+  return INTERVALS.indexOf(t);
+}
+
+// ── File handling ──────────────────────────────────────────────────
+let loadedFiles = []; // { name, content }
+let allRows = [];     // parsed rows across all files
+
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+const fileList = document.getElementById('file-list');
+const applyBtn = document.getElementById('apply-btn');
+
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.name.endsWith('.csv')) return;
+    if (loadedFiles.find(f => f.name === file.name)) return; // dedupe
+    const reader = new FileReader();
+    reader.onload = ev => {
+      loadedFiles.push({ name: file.name, content: ev.target.result });
+      rebuildAllRows();
+      renderFilePills();
+      if (loadedFiles.length > 0) applyBtn.disabled = false;
+    };
+    reader.readAsText(file);
+  });
+}
+
+function renderFilePills() {
+  fileList.innerHTML = '';
+  loadedFiles.forEach((f, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'file-pill';
+    pill.innerHTML = `<span>📄 ${f.name}</span><button class="remove-btn" title="Remove">✕</button>`;
+    pill.querySelector('.remove-btn').onclick = () => {
+      loadedFiles.splice(i, 1);
+      rebuildAllRows();
+      renderFilePills();
+      if (loadedFiles.length === 0) applyBtn.disabled = true;
+    };
+    fileList.appendChild(pill);
+  });
+}
+
+// ── CSV Parsing ──────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const header = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const idxDate  = header.indexOf('date');
+  const idxAgent = header.findIndex(h => h.includes('agent id') || h === 'agent id');
+  const idxName  = header.findIndex(h => h.includes('agent name') || h === 'agent name');
+  const idxTime  = header.indexOf('time');
+  const idxSched = header.findIndex(h => h.includes('scheduled open') || h === 'scheduled open');
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length < 5) continue;
+    const schedOpen = parseFloat(cols[idxSched] || 0);
+    rows.push({
+      date:      (cols[idxDate]  || '').trim(),
+      agentId:   (cols[idxAgent] || '').trim(),
+      agentName: (cols[idxName]  || '').trim(),
+      time:      (cols[idxTime]  || '').trim(),
+      schedOpen,
+      timeIdx:   timeToIndex((cols[idxTime] || '').trim()),
+    });
+  }
+  return rows;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function rebuildAllRows() {
+  allRows = [];
+  loadedFiles.forEach(f => allRows.push(...parseCSV(f.content)));
+}
+
+// ── Filter & Results ──────────────────────────────────────────────
+let currentResults = [];
+
+document.getElementById('apply-btn').addEventListener('click', applyFilter);
+
+function applyFilter() {
+  const startIdx = parseInt(document.getElementById('start-time').value);
+  const endIdx   = parseInt(document.getElementById('end-time').value);
+
+  if (startIdx >= endIdx) {
+    alert('End time must be after start time.');
+    return;
+  }
+
+  const loading = document.getElementById('loading-bar');
+  const msg = document.getElementById('loading-msg');
+  loading.style.display = 'flex';
+  msg.textContent = 'Filtering ' + allRows.length.toLocaleString() + ' records…';
+  applyBtn.disabled = true;
+
+  setTimeout(() => {
+    // Group by agentId + date
+    const agentMap = new Map();
+    allRows.forEach(row => {
+      if (row.timeIdx < startIdx || row.timeIdx >= endIdx) return;
+      const key = row.agentId + '||' + row.date;
+      if (!agentMap.has(key)) {
+        agentMap.set(key, {
+          agentId:   row.agentId,
+          agentName: row.agentName,
+          date:      row.date,
+          openIntervals: 0,
+          peakOpen:  0,
+        });
+      }
+      const rec = agentMap.get(key);
+      if (row.schedOpen > 0) {
+        rec.openIntervals++;
+        if (row.schedOpen > rec.peakOpen) rec.peakOpen = row.schedOpen;
+      }
+    });
+
+    // Only keep those with at least one open interval
+    currentResults = Array.from(agentMap.values())
+      .filter(r => r.openIntervals > 0)
+      .sort((a, b) => a.agentName.localeCompare(b.agentName));
+
+    // Total unique agents in range (including closed)
+    const totalAgents = new Set(
+      allRows
+        .filter(r => r.timeIdx >= startIdx && r.timeIdx < endIdx)
+        .map(r => r.agentId + '||' + r.date)
+    ).size;
+
+    // Stats
+    const statsBar = document.getElementById('stats-bar');
+    statsBar.style.display = 'grid';
+    document.getElementById('stat-open').textContent  = currentResults.length.toLocaleString();
+    document.getElementById('stat-total').textContent = totalAgents.toLocaleString();
+    document.getElementById('stat-range').textContent = `${INTERVALS[startIdx]} – ${INTERVALS[endIdx]}`;
+
+    renderResults(currentResults, startIdx, endIdx);
+
+    loading.style.display = 'none';
+    applyBtn.disabled = false;
+  }, 30);
+}
+
+function renderResults(results, startIdx, endIdx) {
+  const card = document.getElementById('results-card');
+  card.style.display = 'block';
+  card.style.animation = 'fadeIn 0.3s ease';
+
+  document.getElementById('results-title').textContent =
+    `${results.length} employees with open schedule`;
+
+  renderTable(results);
+}
+
+function renderTable(results) {
+  const tbody = document.getElementById('results-body');
+  tbody.innerHTML = '';
+
+  if (results.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">
+      <div class="empty-state">
+        <span class="icon">🔍</span>
+        <p>No employees with an open schedule in this time range.</p>
+      </div>
+    </td></tr>`;
+    document.getElementById('results-count').textContent = '';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  results.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td style="font-weight:600;color:var(--text)">${escHtml(r.agentName)}</td>
+      <td>${escHtml(r.agentId)}</td>
+      <td>${escHtml(r.date)}</td>
+      <td>${r.openIntervals} interval${r.openIntervals !== 1 ? 's' : ''}</td>
+      <td>${r.peakOpen} min</td>
+      <td><span class="badge-open">OPEN</span></td>
+    `;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+  document.getElementById('results-count').textContent =
+    `Showing ${results.length} result${results.length !== 1 ? 's' : ''}`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Search ────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const filtered = currentResults.filter(r =>
+    r.agentName.toLowerCase().includes(q) || r.agentId.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+});
+
+// ── Export ────────────────────────────────────────────────────────
+document.getElementById('export-btn').addEventListener('click', () => {
+  if (!currentResults.length) return;
+  const startIdx = parseInt(document.getElementById('start-time').value);
+  const endIdx   = parseInt(document.getElementById('end-time').value);
+  const range = `${INTERVALS[startIdx]}-${INTERVALS[endIdx]}`.replace(/\s/g, '');
+  const rows = [['#','Agent Name','Agent ID','Date','Open Intervals','Peak Open (min)']];
+  currentResults.forEach((r, i) => {
+    rows.push([i+1, r.agentName, r.agentId, r.date, r.openIntervals, r.peakOpen]);
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `open-employees-${range}.csv`;
+  a.click();
+});
+</script>
+</body>
+</html>
